@@ -101,6 +101,7 @@
 		var playing;
 		var tempo;
 		var totaltick;
+		var nexteventtime;
 		var init;
 	};
 	playerinfo.init = function() {
@@ -110,6 +111,7 @@
 		playerinfo.nexttempo = -1;
 		playerinfo.playing = false;
 		playerinfo.totaltick = 0;
+		playerinfo.nexteventtime = 0;
 		playerinfo.tempo = [{time:0,tickcount:0,tempo:defaulttempo}];
 	};
 	playerinfo.init();
@@ -467,10 +469,11 @@ function getNext() {
 	}
 	function doInterval() {
 		var currenttime = window.performance.now();
-		var targettime = currenttime+playerinfo.buffer*2;
+		var targettime = currenttime+playerinfo.buffer;
 		while (1) {
 			progressbar.value = songinfo.ptr;
 			if (!playerinfo.playing) return;
+			if (songinfo.nexteventtime>=targettime) break;
 			var message = getNext();
 			if (!message.result) {
 				playerinfo.playing = false;
@@ -489,7 +492,10 @@ function getNext() {
 					output.send(message.message,timestamp);
 				}
 			}
-			if (timestamp>targettime) break;
+			if (timestamp>targettime) {
+				songinfo.nexteventtime = timestamp;
+				break;
+			}
 		};
 	}
 	</script>
