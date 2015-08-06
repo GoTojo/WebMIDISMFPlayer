@@ -4,70 +4,64 @@
 <meta charset="utf-8">
 <title>Web MIDI SMF Player</title>
 <script type="text/javascript">
-	var midiAccess = null;
-	var output = null;
+var midiAccess = null;
+var output = null;
 
-	function listInputsAndOutputs(access) {
-		var inputs = midiAccess.inputs();
-		var outputs = midiAccess.outputs();
-
-		for ( i = 0; i < inputs.length; i++) {
-			var option = document.createElement("option");
-
-			option.setAttribute("value", "midiInput");
-			option.appendChild(document.createTextNode(inputs[i].name));
-		}
-
-		for ( i = 0; i < outputs.length; i++) {
-			var option = document.createElement("option");
-			option.setAttribute("value", "midiOuput");
-			option.appendChild(document.createTextNode(outputs[i].name));
-			document.getElementById("midiOutputSelect").appendChild(option);
-		}
+function listOutputs(access) {
+	if (typeof midiAccess.outputs === "function") {
+		var outputs = midiAccess.outputs();		
+	} else {
+        var outputIterator = midiAccess.outputs.values();
+        outputs = [];
+        for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
+            outputs.push(o.value)
+        }
 	}
 
-	function onMIDISuccess(access) {
-		midiAccess = access;
-		//console.log("midi ready!");
-		listInputsAndOutputs(access);
+	for (var i = 0; i < outputs.length; i++) {
+		var option = document.createElement("option");
+		option.setAttribute("value", "midiOuput");
+		option.appendChild(document.createTextNode(outputs[i].name));
+		document.getElementById("midiOutputSelect").appendChild(option);
+		//console.log('output['+i+']:'+outputs[i].name);
 	}
+};
 
-	function onMIDIFailure(msg) {
-		alert("Failed to midi available- " + msg);
-	}
+function onMIDISuccess(access) {
+	midiAccess = access;
+	//console.log("midi ready!");
+	listOutputs(access);
+};
 
-	function selectMidiInput() {
-		var select = document.getElementById("midiInputSelect");
-		var options = document.getElementById("midiInputSelect").options;
-		var value = options.item(select.selectedIndex).value;
-		try { 
-			var inputs = midiAccess.inputs();
-			var input = inputs[select.selectedIndex-1];
-			input.onmidimessage = echoMIDIMessage;
-		} catch (e) {
-				alert("Exception! Couldn't get i/o ports." + e );
-		}
-	}
+function onMIDIFailure(msg) {
+	alert("Failed to midi available- " + msg);
+};
 
-	function selectMidiOutput() {
-		var select = document.getElementById("midiOutputSelect");
-		var options = document.getElementById("midiOutputSelect").options;
-		var value = options.item(select.selectedIndex).value;
-		try { 
-			var outputs = midiAccess.outputs();
-			output = outputs[select.selectedIndex-1];
-		} catch (e) {
-			alert("Exception! Couldn't get i/o ports." + e );
-		}
+function selectMidiOutput() {
+	var select = document.getElementById("midiOutputSelect");
+	var options = document.getElementById("midiOutputSelect").options;
+	var value = options.item(select.selectedIndex).value;
+	if (select.selectedIndex==0) return;
+	if (typeof midiAccess.outputs === "function") {
+		var outputs = midiAccess.outputs();		
+	} else {
+        var outputIterator = midiAccess.outputs.values();
+        outputs = [];
+        for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
+            outputs.push(o.value)
+        }
 	}
+	try { 
+		output = outputs[select.selectedIndex-1];
+		console.log('output('+output.name+')is selected')
+	} catch (e) {
+		alert("Exception! Couldn't get i/o ports." + e );
+	}
+};
 </script>
 </head>
 <body>
 	<h1>Web MIDI SMF Player</h1>
-	<!-- select id="midiInputSelect" onchange="selectMidiInput()">
-		<option value="1">select input port</option>
-	</select>
-	<br/ -->
 	<select id="midiOutputSelect" onchange="selectMidiOutput()">
 		<option value="1">select output port</option>
 	</select>
